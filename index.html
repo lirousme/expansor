@@ -242,6 +242,7 @@
     <div id="headerMenu" class="context-menu" style="display:none;">
         <button id="headerCopiar">Copiar</button>
         <button id="headerTransferir">Transferir</button>
+        <button id="headerCriarPortal">Criar Portal</button>
         <button id="headerColar">Colar</button>
         <button id="headerExcluir">Excluir</button>
     </div>
@@ -372,17 +373,14 @@
       });
     }
 
-    // Função para Expandir as mensagens (Accordion Fluido)
     function toggleMensagensEmbutidas(mensagens, blockContainer) {
       let container = blockContainer.querySelector('.nested-messages');
       
-      // Se já existe aberto, nós fechamos
       if (container) {
         container.remove();
         return;
       }
 
-      // Se não existe, criamos a caixa de expansão
       container = document.createElement('div');
       container.className = 'nested-messages';
 
@@ -393,7 +391,7 @@
           const mDiv = document.createElement('div');
           mDiv.className = 'message';
           mDiv.style.width = '100%';
-          mDiv.style.backgroundColor = '#005c4b'; // Cor estilo chat do WhatsApp
+          mDiv.style.backgroundColor = '#005c4b'; 
           mDiv.style.fontSize = '15px';
 
           if (m.imagem) {
@@ -418,7 +416,6 @@
       if (mensagens.length > 0) {
         mensagens.forEach(msg => {
           
-          // Container em Bloco (Para comportar a linha e a sanfona em baixo)
           const blockContainer = document.createElement('div');
           blockContainer.className = 'block-container';
 
@@ -451,15 +448,24 @@
           btnAcao.style.cursor = 'pointer';
 
           if (msg.tipo === 1) {
-             // É CHAT: Mostra o Play e expande na própria tela
+             // É CHAT
              btnAcao.textContent = '▶';
              btnAcao.style.backgroundColor = 'green';
              btnAcao.onclick = (e) => {
                  e.stopPropagation();
                  toggleMensagensEmbutidas(msg.mensagens, blockContainer);
              };
+          } else if (msg.tipo === 2) {
+             // É PORTAL
+             btnAcao.innerHTML = '🚪<br><span style="font-size:11px; margin-top:2px; display:block;">' + msg.qtd_filhos + '</span>';
+             btnAcao.style.backgroundColor = '#8e44ad'; // Roxo
+             btnAcao.style.flexDirection = 'column';
+             btnAcao.onclick = (e) => {
+                 e.stopPropagation();
+                 window.location.href = 'index.html?id=' + (msg.id_conjunto_portal || msg.id);
+             };
           } else {
-             // É CONJUNTO: Mostra a quantidade de filhos e navega pra dentro
+             // É CONJUNTO
              btnAcao.textContent = msg.qtd_filhos;
              btnAcao.style.backgroundColor = '#1f2c34'; // Cor neutra
              btnAcao.onclick = (e) => {
@@ -545,7 +551,6 @@
       const afterElement = getDragAfterElement(messages, e.clientY);
       const draggableWrapper = document.querySelector('.dragging');
       if (draggableWrapper && !isDraggingTouch) { 
-        // Em Desktop, pegamos o bloco inteiro (pai do wrapper arrastado)
         const draggableBlock = draggableWrapper.parentElement;
         if (afterElement == null) {
           messages.appendChild(draggableBlock);
@@ -556,7 +561,6 @@
     });
 
     function getDragAfterElement(container, y) {
-      // Usamos .block-container ao invés de message-wrapper para garantir que arraste o accordion junto
       const draggableElements = [...container.querySelectorAll('.block-container:not(:has(.dragging))')];
       return draggableElements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
@@ -639,6 +643,7 @@
     document.getElementById('headerExcluir').addEventListener('click', () => { headerMenu.style.display = 'none'; });
     document.getElementById('headerCopiar').addEventListener('click', () => { copiarConjunto(idChatAtual); headerMenu.style.display = 'none'; });
     document.getElementById('headerTransferir').addEventListener('click', () => { transferirConjunto(); headerMenu.style.display = 'none'; });
+    document.getElementById('headerCriarPortal').addEventListener('click', () => { criarPortal(); headerMenu.style.display = 'none'; });
     document.getElementById('headerColar').addEventListener('click', () => { colarConjunto(); headerMenu.style.display = 'none'; });
 
     revisadoBtn.addEventListener('click', () => { concluirRevisao(); });
@@ -659,6 +664,19 @@
       fetch('transferir_conjunto.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_conjunto: idChatAtual }) })
       .then(response => response.json())
       .then(data => { if (data.success) { carregarMensagens(); } });
+    }
+
+    function criarPortal() {
+      if (!idChatAtual) return;
+      fetch('criar_portal.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_conjunto: idChatAtual }) })
+      .then(response => response.json())
+      .then(data => { 
+          if (data.success) { 
+              carregarMensagens(); 
+          } else {
+              alert('Erro: ' + data.error);
+          }
+      });
     }
 
     function copiarConjunto(idConjunto) {
