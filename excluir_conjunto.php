@@ -1,5 +1,5 @@
 <?php
-// excluir_mensagem.php
+// excluir_conjunto.php
 header('Content-Type: application/json');
 
 require 'db.php';
@@ -121,8 +121,11 @@ try {
             ////////////////////////////////
         } elseif ($tipo === 2) {
             ////////////////////////////////
-            // CASO FOR CONJUNTO TIPO 2
-            // mantém espaço para lógica futura
+            // CASO FOR CONJUNTO TIPO 2 (Portal)
+            // Portais não contêm filhos próprios. Apenas exclui a si mesmo.
+            $stmt = $pdo->prepare("DELETE FROM conjuntos WHERE id = :id");
+            $stmt->execute([':id' => $conjuntoId]);
+            // (A imagem não é removida da pasta, pois ela é compartilhada com o original do qual foi copiado)
             ////////////////////////////////
         }
     }
