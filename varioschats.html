@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Enviar JSON</title>
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        color: #0f0;
+        height: 100%;
+        font-family: Consolas, Monaco, monospace;
+    }
+
+    .container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    textarea {
+        flex: 1;
+        background: #0b0b0b;
+        color: #e6e6e6;
+        border: 1px solid #222;
+        padding: 15px;
+        font-size: 14px;
+        resize: none;
+        outline: none;
+        line-height: 1.5;
+    }
+
+    button {
+        margin-top: 15px;
+        background: #111;
+        color: #0f0;
+        border: 1px solid #0f0;
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #0f0;
+        color: #000;
+    }
+
+    pre {
+        margin-top: 15px;
+        background: #050505;
+        border: 1px solid #222;
+        padding: 10px;
+        color: #aaa;
+        max-height: 200px;
+        overflow: auto;
+        font-size: 13px;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <textarea id="jsonInput" placeholder='Cole aqui o JSON'></textarea>
+    <button onclick="enviar()">Enviar para API</button>
+    <pre id="resultado"></pre>
+</div>
+
+<script>
+async function enviar() {
+    const textarea = document.getElementById('jsonInput');
+    const resultado = document.getElementById('resultado');
+
+    let data;
+    try {
+        data = JSON.parse(textarea.value);
+    } catch (e) {
+        resultado.textContent = 'JSON inválido';
+        return;
+    }
+
+    resultado.textContent = 'Enviando...';
+
+    try {
+        const response = await fetch('inserirjson.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const json = await response.json();
+        resultado.textContent = JSON.stringify(json, null, 2);
+    } catch (e) {
+        resultado.textContent = 'Erro na requisição';
+    }
+}
+</script>
+
+</body>
+</html>

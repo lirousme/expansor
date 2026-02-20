@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chat Vazio</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background-color: #000;
+      height: 100vh; /* Fallback para navegadores antigos */
+      height: 100dvh; /* Altura dinâmica que respeita as barras do navegador */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: pan-x pan-y; /* Permite rolar, mas ignora o zoom por gesto */
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 480px;
+      height: 100vh; /* Fallback para navegadores antigos */
+      height: 100dvh; /* Altura dinâmica que respeita as barras do navegador */
+      background-color: #0b141a;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      height: 56px;
+      background-color: #1f2c34;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      color: #e9edef;
+      font-size: 16px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 16px;
+      background-color: #0b141a;
+      overflow-y: auto;
+      font-size: 18px;
+    }
+
+.message {
+  background-color: #005c4b;
+  color: #e9edef;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  max-width: 94%;
+
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /*user-select: none;*/
+  /*-webkit-user-select: none;*/
+  /*-ms-user-select: none;*/
+}
+
+.chat-input {
+  background-color: #1f2c34;
+  padding: 8px 12px;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.chat-input textarea {
+  flex: 1;
+  width: auto;          /* IMPORTANTE */
+  min-width: 0;         /* IMPORTANTE */
+  min-height: 40px;
+  max-height: 120px;
+  resize: none;
+  border-radius: 20px;
+  border: none;
+  padding: 10px 16px;
+  background-color: #2a3942;
+  color: #e9edef;
+  outline: none;
+  font-size: 14px;
+  overflow-y: auto;
+}
+
+.chat-input button {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  margin-left: 8px;
+  border-radius: 50%;
+  border: none;
+  background-color: #00a884;
+  color: #000;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+    @media (min-width: 481px) {
+      .chat-container {
+        height: 90vh;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+    }
+
+
+.message-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+  .message-time {
+    font-size: 11px;
+    color: #aebac1;
+    white-space: nowrap;
+  }
+
+  .day-separator {
+    text-align: center;
+    margin: 16px 0;
+    font-size: 12px;
+    color: #aebac1;
+    position: relative;
+  }
+
+  .day-separator span {
+    background-color: #0b141a;
+    padding: 4px 12px;
+    border-radius: 12px;
+  }
+
+    .context-menu {
+    position: fixed;
+    background-color: #233138;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.4);
+    overflow: hidden;
+    z-index: 9999;
+    min-width: 160px;
+  }
+
+  .context-menu button {
+    width: 100%;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    color: #e9edef;
+    text-align: left;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .context-menu button:hover {
+    background-color: #2a3942;
+  }
+
+
+  .chat-header {
+  justify-content: space-between;
+}
+
+.header-menu-btn {
+  background: none;
+  border: none;
+  color: #e9edef;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.chat-header button {
+  background-color: #1f2c34;
+  color: #e9edef;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.chat-header button:hover {
+  background-color: #2a3942;
+}
+
+/* estado armado do botão imagem */
+#imageSlotBtn.armed {
+  background-color: orange;
+  color: #000;
+}
+
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <!-- Cabeçalho -->
+    <div class="chat-header">
+        <button id="imageSlotBtn" style="display:block;">Imagem</button>
+        <button id="ChatsEmFila"></button>
+        <button id="metaDiaria"></button>
+        <button id="revisoesDoChat"></button>
+        <button id="pausarBtn">II</button>
+        <button class="header-menu-btn" id="headerMenuBtn" style="display:none;">⋮</button>
+    </div>
+    <!-- ///////////////////////////////////// -->
+    <!-- input invisível para upload da imagem -->
+    <input type="file" id="imageInput" accept="image/*" style="display:none;">
+    <!-- ///////////////////////////////////// -->
+    <!-- Opções que aparecem ao clicar em ":" -->
+    <div id="headerMenu" class="context-menu" style="display:none;">
+        <button id="headerExcluir">Excluir</button>
+    </div>
+    <!-- ///////////////////////////////////// -->
+    <!-- Mensagens -->
+    <div class="chat-messages" id="chatMessages"></div>
+    <!-- ///////////////////////////////////// -->
+    <!-- Rodapé -->
+<div style="display: flex; width: 100%;">
+    <button id="gerarTodasBtn" style="flex: 1; display:none;">Gerar</button>
+    <button id="playBtn" onclick="play()" style="flex: 1; display:none;">Play</button>
+    <button id="sendNewBtn" style="flex: 1;">New Chat</button>
+    <button id="revisado" style="flex: 1;">Concluir</button>
+</div>
+    <div class="chat-input">
+        <div class="chat-input">
+            <textarea id="chatInput" placeholder="" rows="1" maxlength="8000"></textarea>
+            <button id="sendBtn">➤</button>
+        </div>
+    </div>
+    <!-- ///////////////////////////////////// -->
+  </div>
+  
+  <div id="alert3s" style="
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+">
+  <div style="
+    background: #111;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+    width: 300px;
+  ">
+    <p id="alertMsg">Finalizado. Fechando em 3...</p>
+    <button onclick="fecharAlertManual()">OK</button>
+  </div>
+</div>
+
+  <script>
+    // pega id_chat da URL
+    const params = new URLSearchParams(window.location.search);
+    const idUrl = params.get('id');
+    let idChatAtual = idUrl ? idUrl : 'no';
+    console.log(idChatAtual);
+    
+    var audios = [];
+    var listaDeIDs = [];
+    var textoAtual = "Nenhum texto na tela.";
+    
+    var editarAtivado = 0;
+    const input = document.getElementById('chatInput');
+    const messages = document.getElementById('chatMessages');
+    const sendBtn = document.getElementById('sendBtn');
+    const sendNewBtn = document.getElementById('sendNewBtn');
+    const revisadoBtn = document.getElementById('revisado');
+    
+    //Variáveis usadas para adicionar imagem
+    let imagemEngatilhada = null;
+    const imageBtn = document.getElementById('imageSlotBtn');
+    const imageInput = document.getElementById('imageInput');
+    ////////////////////////////////////////
+
+function sendMessage() {
+  const text = input.value.trim();
+  if ((!text && !imagemEngatilhada) || !idChatAtual) return;
+
+  const formData = new FormData();
+  formData.append('texto', text);
+  formData.append('id_chat', idChatAtual);
+
+  if (imagemEngatilhada) {
+    formData.append('imagem', imagemEngatilhada);
+    imagemEngatilhada = null;
+    imageBtn.classList.remove('armed');
+    imageInput.value = '';
+  }
+
+  fetch('adicionar_mensagem.php', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      input.value = '';
+      carregarMensagens();
+    }
+  });
+}
+
+
+function editMessage() {
+  const text = input.value.trim();
+  if (!text || !idChatAtual) return;
+
+  fetch('editar_mensagem.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      texto: text,
+      editarAtivado: editarAtivado
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      input.value = '';
+      editarAtivado = 0;
+      carregarMensagens();
+    }
+  });
+}
+
+function deleteMessage(idMessage) {
+  if (!idMessage) return;
+
+  fetch('excluir_mensagem.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      idMessage: idMessage
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      input.value = '';
+      carregarMensagens();
+    }
+  });
+}
+
+//O que acontece ao clicar no botão "Send" ou apertar enter
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = input.scrollHeight + 'px';
+});
+sendBtn.addEventListener('click', () => {
+
+  if (editarAtivado === 0) {
+    sendMessage();
+  } else {
+    editMessage();
+  }
+});
+//input.addEventListener('keydown', (e) => {
+  //if (e.key !== 'Enter' || e.shiftKey) return;
+
+  //e.preventDefault();
+  //console.log("ID da mensagem: ", editarAtivado);
+
+  //if (editarAtivado === 0) {
+    //sendMessage();
+  //} else {
+    //editMessage();
+  //}
+//});
+
+sendNewBtn.addEventListener('click', () => {
+    const textNew = input.value.trim();
+    expandir(textNew);
+});
+//////////////////////////////////////////////////////////
+gerarTodasBtn.addEventListener('click', async () => {
+    const idsUnicos = [...new Set(listaDeIDs)];
+    console.log(idsUnicos);
+
+    for (const id of idsUnicos) {
+        const formData = new FormData();
+        formData.append('id', id);
+
+        const response = await fetch('fish_audio.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.status !== 'ok') {
+            alert('Erro: ' + data.mensagem);
+            return;
+        }
+    }
+
+    location.reload();
+});
+//////////////////////////////////////////////////////////
+let playerAudio = null;
+
+function play() {
+  if (!Array.isArray(audios) || audios.length === 0) {
+    alert('Não há áudios para tocar');
+    return;
+  }
+
+  const fila = [];
+
+  for (let i = 0; i < audios.length; i++) {
+    fila.push(i);
+  }
+
+  let indiceFila = 0;
+  playerAudio = new Audio();
+
+  playerAudio.addEventListener('ended', () => {
+    indiceFila++;
+
+    if (indiceFila < fila.length) {
+      playerAudio.src = audios[fila[indiceFila]];
+      playerAudio.play().catch(console.error);
+    } else {
+      mostrarAlertTimeout();
+    }
+  });
+
+  playerAudio.src = audios[fila[indiceFila]];
+  playerAudio.play().catch(console.error);
+}
+
+let timeoutAlert = null;
+let tempoRestante = 3;
+
+function mostrarAlertTimeout() {
+  const modal = document.getElementById("alert3s");
+  const msg = document.getElementById("alertMsg");
+
+  tempoRestante = 3;
+  modal.style.display = "flex";
+
+  msg.textContent = `Finalizado. Fechando em ${tempoRestante}...`;
+
+  timeoutAlert = setInterval(() => {
+    tempoRestante--;
+
+    if (tempoRestante <= 0) {
+      clearInterval(timeoutAlert);
+      modal.style.display = "none";
+      concluirRevisao(); // chama se não clicou OK
+    } else {
+      msg.textContent = `Finalizado. Fechando em ${tempoRestante}...`;
+    }
+  }, 1000);
+}
+
+function fecharAlertManual() {
+  clearInterval(timeoutAlert);
+  document.getElementById("alert3s").style.display = "none";
+}
+
+function pausarAudio() {
+  if (playerAudio && !playerAudio.paused) {
+    playerAudio.pause();
+  }
+}
+
+document.getElementById('pausarBtn').addEventListener('click', pausarAudio);
+
+function play1() {
+    if (!window.speechSynthesis) return;
+
+    speechSynthesis.cancel(); // para qualquer fala anterior
+
+    const texto = textoAtual || "";
+
+    if (!texto.trim()) return;
+
+    const fala = new SpeechSynthesisUtterance(texto);
+    fala.lang = "pt-BR";
+
+    speechSynthesis.speak(fala);
+}
+//////////////////////////////////////////////////////////
+
+function formatHora(dataStr) {
+  const d = new Date(dataStr.replace(' ', 'T'));
+  return d.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function formatDia(dataStr) {
+  const d = new Date(dataStr.replace(' ', 'T'));
+  return d.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+
+function carregarMensagens() {
+  fetch('buscar_mensagens.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      id_chat: idChatAtual
+    })
+  })
+  .then(res => res.json())
+    .then(data => {
+      if (!data.success) return;
+        console.log("data.id_chat", data.id_chat);
+      // Se não houver mensagens, ainda mantém o id_chat
+      if (data.id_chat) {
+        idChatAtual = data.id_chat;
+      }
+      
+      
+      
+      document.getElementById('ChatsEmFila').textContent = '[F:' + data.chats_em_fila + ']';
+      document.getElementById('metaDiaria').textContent = '[' + data.concluidos_hoje + ']';
+      document.getElementById('revisoesDoChat').textContent = '[' + data.quantidade_revisoes + ']';
+
+      messages.innerHTML = '';
+        
+      let ultimoDia = null;
+
+      if (data.mensagens.length > 0) {
+          
+// Layout de cada mensagem unitária
+data.mensagens.forEach(msg => {
+  const diaAtual = formatDia(msg.data_mensagem);
+  
+  if (msg.audio && msg.audio !== 'no') {
+    audios.push(msg.audio);
+    play();
+  } else {
+      document.getElementById('gerarTodasBtn').style.backgroundColor = 'orange';
+  }
+  
+  listaDeIDs.push(msg.id);
+
+  if (diaAtual !== ultimoDia) {
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'day-separator';
+    dayDiv.innerHTML = `<span>${diaAtual}</span>`;
+    messages.appendChild(dayDiv);
+    ultimoDia = diaAtual;
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'message-wrapper';
+
+  const div = document.createElement('div');
+  div.className = 'message';
+  
+  const wrapperb = document.createElement('div');
+wrapperb.className = 'message-wrapper';
+wrapperb.style.display = 'flex';
+wrapperb.style.flexDirection = 'column';
+
+  // Se tiver imagem
+  if (msg.imagem) {
+    const img = document.createElement('img');
+    img.src = 'imagens/' + msg.imagem; // pasta onde a imagem foi salva
+    img.style.maxWidth = '385px';
+    img.style.borderRadius = '8px';
+    img.style.display = 'block';
+    img.style.marginBottom = '6px';
+    div.appendChild(img);
+  }
+
+  // Texto da mensagem
+// Texto da mensagem (com links clicáveis)
+const textoComLinks = msg.texto.replace(
+  /(https?:\/\/[^\s]+)/g,
+  '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+);
+
+div.innerHTML += textoComLinks;
+
+  // Evento para abrir menu
+  div.addEventListener('mousedown', (e) => {
+    pressTimer = setTimeout(() => {
+      abrirMenu(e.clientX, e.clientY, msg);
+    }, 1500);
+  });
+  div.addEventListener('mouseup', () => { clearTimeout(pressTimer); });
+  div.addEventListener('mouseleave', () => { clearTimeout(pressTimer); });
+  div.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    pressTimer = setTimeout(() => {
+      abrirMenu(touch.clientX, touch.clientY, msg);
+    }, 1500);
+  });
+  div.addEventListener('touchend', () => { clearTimeout(pressTimer); });
+
+  const time = document.createElement('div');
+  time.className = 'message-time';
+  time.textContent = formatHora(msg.data_mensagem);
+  
+const timed = document.createElement('div');
+timed.className = 'message-time';
+timed.textContent = 'Gerar';
+timed.addEventListener('click', () => {
+      const formData = new FormData();
+      formData.append('id', msg.id);
+      fetch('fish_audio.php', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                //location.reload();
+            } else {
+                alert('Erro: ' + data.mensagem);
+            }
+        });
+});
+
+const timet = document.createElement('div');
+timet.className = 'message-time';
+timet.textContent = 'Ouvir';
+timet.addEventListener('click', () => {
+      if (!msg.audio || msg.audio.toLowerCase() === 'no') {
+          alert('Este parágrafo não tem áudio');
+          return;
+      }
+      const caminhoAudio = msg.audio;
+      const audio = new Audio(caminhoAudio);
+      audio.play().catch(err => console.error('Erro ao reproduzir áudio:', err));
+});
+  
+  wrapper.appendChild(div);
+  //wrapper.appendChild(wrapperb);
+  //wrapperb.appendChild(timed);
+  //wrapperb.appendChild(time);
+  //wrapperb.appendChild(timet);
+  messages.appendChild(wrapper);
+});
+
+      } else {
+        // Caso não haja mensagens, ainda assim vai manter o id_chat
+        console.log('Nenhuma mensagem encontrada, mas o id_chat é: ' + idChatAtual);
+      }
+
+      messages.scrollTop = messages.scrollHeight;
+    });
+}
+
+
+window.addEventListener('load', carregarMensagens);
+
+///////////////////////////
+let pressTimer = null;
+let menuAberto = null;
+
+function fecharMenu() {
+  if (menuAberto) {
+    menuAberto.remove();
+    menuAberto = null;
+  }
+}
+
+document.addEventListener('mousedown', fecharMenu);
+document.addEventListener('scroll', fecharMenu);
+
+function abrirMenu(x, y, msg) {
+  fecharMenu();
+
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+  menu.style.top = y + 'px';
+  menu.style.left = x + 'px';
+
+  // impede o menu de fechar ao soltar o clique
+  menu.addEventListener('mousedown', e => e.stopPropagation());
+  menu.addEventListener('click', e => e.stopPropagation());
+
+    const btnExpandir = document.createElement('button');
+    btnExpandir.textContent = 'Expandir';
+    btnExpandir.onclick = () => {
+        expandir(msg.texto);
+        fecharMenu();
+    };
+
+  const btnEditar = document.createElement('button');
+  btnEditar.textContent = 'Editar';
+  btnEditar.onclick = () => {
+    editarAtivado = msg.id;
+    input.value = msg.texto;
+    input.focus();
+    fecharMenu();
+  };
+
+  const btnExcluir = document.createElement('button');
+  btnExcluir.textContent = 'Excluir';
+  btnExcluir.onclick = () => {
+    deleteMessage(msg.id);
+    fecharMenu();
+  };
+
+  menu.appendChild(btnExpandir);
+  menu.appendChild(btnEditar);
+  menu.appendChild(btnExcluir);
+
+  document.body.appendChild(menu);
+  menuAberto = menu;
+}
+///////////////////////////
+const headerBtn = document.getElementById('headerMenuBtn');
+const headerMenu = document.getElementById('headerMenu');
+
+headerBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+
+  headerMenu.style.display = 'block';
+
+  const rect = headerBtn.getBoundingClientRect();
+  const menuWidth = headerMenu.offsetWidth;
+
+  headerMenu.style.top = rect.bottom + 'px';
+  headerMenu.style.left = (rect.left - menuWidth) + 'px';
+});
+
+// impede fechar ao clicar no próprio menu
+headerMenu.addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+
+// fecha ao clicar fora
+document.addEventListener('click', () => {
+  headerMenu.style.display = 'none';
+});
+
+document.getElementById('headerExcluir').addEventListener('click', () => {
+  console.log('Excluir conversa');
+  headerMenu.style.display = 'none';
+});
+///////////////////////////
+// Expandir
+function expandir(textoMensagem) {
+  if (!textoMensagem || !idChatAtual) return;
+
+  fetch('expandir.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      texto: textoMensagem,
+      id_chat: idChatAtual
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      location.reload();
+      //carregarMensagens();
+    }
+  });
+}
+///////////////////////////
+revisadoBtn.addEventListener('click', () => {
+  concluirRevisao();
+});
+///////////////////////////
+// Concluir Revisão
+function concluirRevisao() {
+  if (!idChatAtual) return;
+
+  fetch('concluir_revisao.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      id_chat: idChatAtual
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      //carregarMensagens();
+      location.reload();
+    }
+  });
+}
+///////////////////////////
+imageBtn.addEventListener('click', () => {
+  if (imagemEngatilhada) {
+    // remove imagem do slot ativo
+    imagemEngatilhada = null;
+    imageBtn.classList.remove('armed');
+  } else {
+    // abre seletor de imagem
+    imageInput.click();
+  }
+});
+
+imageInput.addEventListener('change', () => {
+  if (imageInput.files.length > 0) {
+    imagemEngatilhada = imageInput.files[0];
+    imageBtn.classList.add('armed');
+  }
+});
+
+////////////////////////////////////////
+//FORÇA A PROIBIÇÃO DE ZOOM PARA IPHONE
+// Impede o zoom de pinça (multi-touch)
+document.addEventListener('touchstart', function (event) {
+  if (event.touches.length > 1) {
+    event.preventDefault();
+  }
+}, { passive: false });
+
+// Impede o zoom de clique duplo
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+  const now = (new Date()).getTime();
+  if (now - lastTouchEnd <= 300) {
+    event.preventDefault();
+  }
+  lastTouchEnd = now;
+}, false);
+////////////////////////////////////////
+  </script>
+</body>
+</html>
