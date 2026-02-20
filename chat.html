@@ -20,6 +20,7 @@
       justify-content: center;
       align-items: center;
       touch-action: pan-x pan-y; /* Permite rolar, mas ignora o zoom por gesto */
+      overscroll-behavior: none;
     }
 
     .chat-container {
@@ -61,9 +62,10 @@
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  /*user-select: none;*/
-  /*-webkit-user-select: none;*/
-  /*-ms-user-select: none;*/
+  
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .chat-input {
@@ -118,6 +120,20 @@
     align-items: flex-end;
     gap: 6px;
     margin-bottom: 8px;
+    
+    cursor: grab;
+    transition: transform 0.2s, opacity 0.2s;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;
+}
+
+.message-wrapper.dragging {
+    opacity: 0.5;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transform: scale(1.02);
+    z-index: 10;
 }
 
   .message-time {
@@ -283,6 +299,11 @@
     let imagemEngatilhada = null;
     const imageBtn = document.getElementById('imageSlotBtn');
     const imageInput = document.getElementById('imageInput');
+
+    // Variáveis para controle de toque no Safari (Arrastar e soltar)
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let isDraggingTouch = false;
     ////////////////////////////////////////
 
 function sendMessage() {
@@ -372,18 +393,6 @@ sendBtn.addEventListener('click', () => {
     editMessage();
   }
 });
-//input.addEventListener('keydown', (e) => {
-  //if (e.key !== 'Enter' || e.shiftKey) return;
-
-  //e.preventDefault();
-  //console.log("ID da mensagem: ", editarAtivado);
-
-  //if (editarAtivado === 0) {
-    //sendMessage();
-  //} else {
-    //editMessage();
-  //}
-//});
 
 sendNewBtn.addEventListener('click', () => {
     const textNew = input.value.trim();
@@ -483,21 +492,6 @@ function pausarAudio() {
 }
 
 document.getElementById('pausarBtn').addEventListener('click', pausarAudio);
-
-function play1() {
-    if (!window.speechSynthesis) return;
-
-    speechSynthesis.cancel(); // para qualquer fala anterior
-
-    const texto = textoAtual || "";
-
-    if (!texto.trim()) return;
-
-    const fala = new SpeechSynthesisUtterance(texto);
-    fala.lang = "pt-BR";
-
-    speechSynthesis.speak(fala);
-}
 //////////////////////////////////////////////////////////
 
 function formatHora(dataStr) {
@@ -536,8 +530,6 @@ function carregarMensagens() {
         idChatAtual = data.id_chat;
       }
       
-      
-      
       document.getElementById('ChatsEmFila').textContent = '[F:' + data.chats_em_fila + ']';
       document.getElementById('metaDiaria').textContent = '[' + data.concluidos_hoje + ']';
       document.getElementById('revisoesDoChat').textContent = '[' + data.quantidade_revisoes + ']';
@@ -548,118 +540,133 @@ function carregarMensagens() {
 
       if (data.mensagens.length > 0) {
           
-// Layout de cada mensagem unitária
-data.mensagens.forEach(msg => {
-  const diaAtual = formatDia(msg.data_mensagem);
-  
-  if (msg.audio && msg.audio !== 'no') {
-    audios.push(msg.audio);
-    play();
-  } else {
-      document.getElementById('gerarTodasBtn').style.backgroundColor = 'orange';
-  }
-  
-  listaDeIDs.push(msg.id);
+        // Layout de cada mensagem unitária
+        data.mensagens.forEach(msg => {
+          const diaAtual = formatDia(msg.data_mensagem);
+          
+          if (msg.audio && msg.audio !== 'no') {
+            audios.push(msg.audio);
+            play();
+          } else {
+              document.getElementById('gerarTodasBtn').style.backgroundColor = 'orange';
+          }
+          
+          listaDeIDs.push(msg.id);
 
-  if (diaAtual !== ultimoDia) {
-    const dayDiv = document.createElement('div');
-    dayDiv.className = 'day-separator';
-    dayDiv.innerHTML = `<span>${diaAtual}</span>`;
-    messages.appendChild(dayDiv);
-    ultimoDia = diaAtual;
-  }
+          if (diaAtual !== ultimoDia) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day-separator';
+            dayDiv.innerHTML = `<span>${diaAtual}</span>`;
+            messages.appendChild(dayDiv);
+            ultimoDia = diaAtual;
+          }
 
-  const wrapper = document.createElement('div');
-  wrapper.className = 'message-wrapper';
+          const wrapper = document.createElement('div');
+          wrapper.className = 'message-wrapper';
+          wrapper.setAttribute('draggable', 'true');
+          wrapper.dataset.id = msg.id;
 
-  const div = document.createElement('div');
-  div.className = 'message';
-  
-  const wrapperb = document.createElement('div');
-wrapperb.className = 'message-wrapper';
-wrapperb.style.display = 'flex';
-wrapperb.style.flexDirection = 'column';
+          const div = document.createElement('div');
+          div.className = 'message';
 
-  // Se tiver imagem
-  if (msg.imagem) {
-    const img = document.createElement('img');
-    img.src = 'imagens/' + msg.imagem; // pasta onde a imagem foi salva
-    img.style.maxWidth = '385px';
-    img.style.borderRadius = '8px';
-    img.style.display = 'block';
-    img.style.marginBottom = '6px';
-    div.appendChild(img);
-  }
+          // Se tiver imagem
+          if (msg.imagem) {
+            const img = document.createElement('img');
+            img.src = 'imagens/' + msg.imagem; // pasta onde a imagem foi salva
+            img.style.maxWidth = '385px';
+            img.style.borderRadius = '8px';
+            img.style.display = 'block';
+            img.style.marginBottom = '6px';
+            div.appendChild(img);
+          }
 
-  // Texto da mensagem
-// Texto da mensagem (com links clicáveis)
-const textoComLinks = msg.texto.replace(
-  /(https?:\/\/[^\s]+)/g,
-  '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-);
+          // Texto da mensagem (com links clicáveis)
+          const textoComLinks = msg.texto.replace(
+            /(https?:\/\/[^\s]+)/g,
+            '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+          );
 
-div.innerHTML += textoComLinks;
+          div.innerHTML += textoComLinks;
 
-  // Evento para abrir menu
-  div.addEventListener('mousedown', (e) => {
-    pressTimer = setTimeout(() => {
-      abrirMenu(e.clientX, e.clientY, msg);
-    }, 1500);
-  });
-  div.addEventListener('mouseup', () => { clearTimeout(pressTimer); });
-  div.addEventListener('mouseleave', () => { clearTimeout(pressTimer); });
-  div.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    pressTimer = setTimeout(() => {
-      abrirMenu(touch.clientX, touch.clientY, msg);
-    }, 1500);
-  });
-  div.addEventListener('touchend', () => { clearTimeout(pressTimer); });
+          const cancelPress = () => {
+            clearTimeout(pressTimer);
+          };
 
-  const time = document.createElement('div');
-  time.className = 'message-time';
-  time.textContent = formatHora(msg.data_mensagem);
-  
-const timed = document.createElement('div');
-timed.className = 'message-time';
-timed.textContent = 'Gerar';
-timed.addEventListener('click', () => {
-      const formData = new FormData();
-      formData.append('id', msg.id);
-      fetch('fish_audio.php', { method: 'POST', body: formData })
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === 'ok') {
-                //location.reload();
-            } else {
-                alert('Erro: ' + data.mensagem);
+          // --- LOGICA TOUCH (SAFARI MOBILE) ---
+          wrapper.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            touchStartY = touch.clientY;
+            touchStartX = touch.clientX;
+            isDraggingTouch = false;
+
+            // Inicia timer do menu
+            pressTimer = setTimeout(() => {
+              if (!isDraggingTouch) {
+                abrirMenu(touch.clientX, touch.clientY, msg);
+              }
+            }, 1500);
+          }, { passive: true });
+
+          wrapper.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const moveY = Math.abs(touch.clientY - touchStartY);
+            const moveX = Math.abs(touch.clientX - touchStartX);
+
+            // Se moveu mais de 10px, consideramos que quer arrastar e cancelamos o menu
+            if (moveY > 10 || moveX > 10) {
+              isDraggingTouch = true;
+              cancelPress();
+              
+              // Entra no modo de arraste visual
+              if (!wrapper.classList.contains('dragging')) {
+                wrapper.classList.add('dragging');
+              }
+
+              // Prevenir o scroll e o refresh da página enquanto arrasta
+              if (e.cancelable) e.preventDefault();
+
+              // Simulação lógica do dragover
+              const afterElement = getDragAfterElement(messages, touch.clientY);
+              if (afterElement == null) {
+                messages.appendChild(wrapper);
+              } else {
+                messages.insertBefore(wrapper, afterElement);
+              }
             }
-        });
-});
+          }, { passive: false });
 
-const timet = document.createElement('div');
-timet.className = 'message-time';
-timet.textContent = 'Ouvir';
-timet.addEventListener('click', () => {
-      if (!msg.audio || msg.audio.toLowerCase() === 'no') {
-          alert('Este parágrafo não tem áudio');
-          return;
-      }
-      const caminhoAudio = msg.audio;
-      const audio = new Audio(caminhoAudio);
-      audio.play().catch(err => console.error('Erro ao reproduzir áudio:', err));
-});
-  
-  wrapper.appendChild(div);
-  //wrapper.appendChild(wrapperb);
-  //wrapperb.appendChild(timed);
-  //wrapperb.appendChild(time);
-  //wrapperb.appendChild(timet);
-  messages.appendChild(wrapper);
-});
+          wrapper.addEventListener('touchend', () => {
+            cancelPress();
+            if (wrapper.classList.contains('dragging')) {
+              wrapper.classList.remove('dragging');
+              salvarNovaOrdem();
+            }
+          });
+
+          // --- LOGICA DESKTOP (DRAG & DROP) ---
+          div.addEventListener('mousedown', (e) => {
+            pressTimer = setTimeout(() => {
+              abrirMenu(e.clientX, e.clientY, msg);
+            }, 1500);
+          });
+          div.addEventListener('mouseup', cancelPress);
+          div.addEventListener('mouseleave', cancelPress);
+
+          wrapper.addEventListener('dragstart', () => {
+            cancelPress();
+            wrapper.classList.add('dragging');
+          });
+
+          wrapper.addEventListener('dragend', () => {
+            wrapper.classList.remove('dragging');
+            salvarNovaOrdem();
+          });
+
+          wrapper.appendChild(div);
+          messages.appendChild(wrapper);
+        });
 
       } else {
-        // Caso não haja mensagens, ainda assim vai manter o id_chat
         console.log('Nenhuma mensagem encontrada, mas o id_chat é: ' + idChatAtual);
       }
 
@@ -667,6 +674,41 @@ timet.addEventListener('click', () => {
     });
 }
 
+// Global Dragover para o contêiner de mensagens (Desktop)
+messages.addEventListener('dragover', e => {
+  e.preventDefault();
+  const afterElement = getDragAfterElement(messages, e.clientY);
+  const draggable = document.querySelector('.dragging');
+  if (draggable && !isDraggingTouch) { // Evita conflito se o touch já estiver cuidando
+    if (afterElement == null) {
+      messages.appendChild(draggable);
+    } else {
+      messages.insertBefore(draggable, afterElement);
+    }
+  }
+});
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.message-wrapper:not(.dragging)')];
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function salvarNovaOrdem() {
+  const ids = [...messages.querySelectorAll('.message-wrapper')].map(el => el.dataset.id);
+  fetch('reordenar_mensagens.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids: ids })
+  });
+}
 
 window.addEventListener('load', carregarMensagens);
 
