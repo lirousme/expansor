@@ -75,7 +75,6 @@ if (!$familiaIds) {
 }
 
 /*
-/*
 3. Escolher APENAS UM chat da família com tipo = 1
 */
 $placeholders = implode(',', array_fill(0, count($familiaIds), '?'));
@@ -98,8 +97,6 @@ $fila = $stmtFila->fetch(PDO::FETCH_ASSOC);
 
 $chatsEmFila = $fila ? (int)$fila['total'] : 0;
 
-
-// ORDER BY rev.quantidade_revisoes ASC
 
 $sqlChatEscolhido = "
 SELECT r.id AS id_chat_conjunto
@@ -126,6 +123,7 @@ $id_chat_final = $chatEscolhido['id_chat_conjunto'];
 
 /*
 4. Buscar mensagens SOMENTE do chat escolhido
+   (A ordem de carregamento agora obedece "f.ordem ASC" antes de "f.id ASC")
 */
 $sqlMensagens = "
 SELECT 
@@ -140,7 +138,7 @@ SELECT
 FROM mensagens f
 JOIN conjuntos r ON r.id = f.id_chat_conjunto
 WHERE f.id_chat_conjunto = :id_chat
-ORDER BY f.id ASC
+ORDER BY f.ordem ASC, f.id ASC
 ";
 
 $stmtMsg = $pdo->prepare($sqlMensagens);
@@ -193,5 +191,3 @@ echo json_encode([
   'quantidade_revisoes' => $quantidadeRevisoes,
   'chats_em_fila' => $chatsEmFila
 ]);
-
-
