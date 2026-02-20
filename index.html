@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Chat Vazio</title>
+  <title>Expansor</title>
   <style>
     * {
       box-sizing: border-box;
@@ -14,21 +14,20 @@
 
     body {
       background-color: #000;
-      height: 100vh; /* Fallback para navegadores antigos */
-      height: 100dvh; /* Altura dinâmica que respeita as barras do navegador */
+      height: 100vh;
+      height: 100dvh;
       display: flex;
       justify-content: center;
       align-items: center;
-      touch-action: pan-x pan-y; /* Permite rolar, mas ignora o zoom por gesto */
-      /* Impede o pull-to-refresh no topo da página em alguns navegadores */
-      overscroll-behavior: none; /* Impede o pull-to-refresh no topo da página em alguns navegadores, MAS NÃO DE TODOS */
+      touch-action: pan-x pan-y;
+      overscroll-behavior: none;
     }
 
     .chat-container {
       width: 100%;
       max-width: 480px;
-      height: 100vh; /* Fallback para navegadores antigos */
-      height: 100dvh; /* Altura dinâmica que respeita as barras do navegador */
+      height: 100vh;
+      height: 100dvh;
       background-color: #0b141a;
       display: flex;
       flex-direction: column;
@@ -51,61 +50,59 @@
       overflow-y: auto;
     }
 
-.message {
-  background-color: #6a0dad;
-  color: #e9edef;
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  width: 90%;
+    .message {
+      background-color: #6a0dad;
+      color: #e9edef;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      width: 90%;
+      display: flex;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
 
-    display: flex;
+    .chat-input {
+      background-color: #1f2c34;
+      padding: 8px 12px;
+      display: flex;
+      align-items: flex-end;
+      width: 100%;
+    }
 
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-    user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-}
+    .chat-input textarea {
+      flex: 1;
+      width: auto;
+      min-width: 0;
+      min-height: 40px;
+      max-height: 120px;
+      resize: none;
+      border-radius: 20px;
+      border: none;
+      padding: 10px 16px;
+      background-color: #2a3942;
+      color: #e9edef;
+      outline: none;
+      font-size: 14px;
+      overflow-y: auto;
+    }
 
-.chat-input {
-  background-color: #1f2c34;
-  padding: 8px 12px;
-  display: flex;
-  align-items: flex-end;
-  width: 100%;
-}
-
-.chat-input textarea {
-  flex: 1;
-  width: auto;          /* IMPORTANTE */
-  min-width: 0;         /* IMPORTANTE */
-  min-height: 40px;
-  max-height: 120px;
-  resize: none;
-  border-radius: 20px;
-  border: none;
-  padding: 10px 16px;
-  background-color: #2a3942;
-  color: #e9edef;
-  outline: none;
-  font-size: 14px;
-  overflow-y: auto;
-}
-
-.chat-input button {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  margin-left: 8px;
-  border-radius: 50%;
-  border: none;
-  background-color: #00a884;
-  color: #000;
-  font-size: 16px;
-  cursor: pointer;
-}
+    .chat-input button {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      margin-left: 8px;
+      border-radius: 50%;
+      border: none;
+      background-color: #00a884;
+      color: #000;
+      font-size: 16px;
+      cursor: pointer;
+    }
 
     @media (min-width: 481px) {
       .chat-container {
@@ -115,20 +112,25 @@
       }
     }
 
+    /* Alterado para permitir 100% de largura no bloco principal */
+    .block-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
 
-.message-wrapper {
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    margin-bottom: 8px;
-    
-    cursor: grab;
-    transition: transform 0.2s, opacity 0.2s;
-    /* Necessário para o toque não selecionar texto enquanto arrasta */
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: pan-y;
-}
+    .message-wrapper {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        margin-bottom: 8px;
+        cursor: grab;
+        transition: transform 0.2s, opacity 0.2s;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: pan-y;
+        width: 100%;
+    }
 
     .message-wrapper.dragging {
       opacity: 0.5;
@@ -138,157 +140,131 @@
       z-index: 10;
     }
 
-  .message-time {
-    font-size: 11px;
-    color: #aebac1;
-    white-space: nowrap;
-  }
-
-  .day-separator {
-    text-align: center;
-    margin: 16px 0;
-    font-size: 12px;
-    color: #aebac1;
-    position: relative;
-  }
-
-  .day-separator span {
-    background-color: #0b141a;
-    padding: 4px 12px;
-    border-radius: 12px;
-  }
-
     .context-menu {
-    position: fixed;
-    background-color: #233138;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.4);
-    overflow: hidden;
-    z-index: 9999;
-    min-width: 160px;
-  }
+      position: fixed;
+      background-color: #233138;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.4);
+      overflow: hidden;
+      z-index: 9999;
+      min-width: 160px;
+    }
 
-  .context-menu button {
-    width: 100%;
-    padding: 12px 16px;
-    background: none;
-    border: none;
-    color: #e9edef;
-    text-align: left;
-    font-size: 14px;
-    cursor: pointer;
-  }
+    .context-menu button {
+      width: 100%;
+      padding: 12px 16px;
+      background: none;
+      border: none;
+      color: #e9edef;
+      text-align: left;
+      font-size: 14px;
+      cursor: pointer;
+    }
 
-  .context-menu button:hover {
-    background-color: #2a3942;
-  }
+    .context-menu button:hover {
+      background-color: #2a3942;
+    }
 
+    .chat-header {
+      justify-content: space-between;
+    }
 
-  .chat-header {
-  justify-content: space-between;
-}
+    .header-menu-btn {
+      background: none;
+      border: none;
+      color: #e9edef;
+      font-size: 22px;
+      cursor: pointer;
+    }
 
-.header-menu-btn {
-  background: none;
-  border: none;
-  color: #e9edef;
-  font-size: 22px;
-  cursor: pointer;
-}
+    .chat-header button {
+      background-color: #1f2c34;
+      color: #e9edef;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      text-align: center;
+    }
 
-.chat-header button {
-  background-color: #1f2c34;
-  color: #e9edef;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  
-  white-space: normal;        /* permite quebra de linha */
-  word-break: break-word;     /* quebra palavras longas */
-  overflow-wrap: break-word;  /* compatibilidade */
-  text-align: center;
-}
+    .chat-header button:hover {
+      background-color: #2a3942;
+    }
 
-.chat-header button:hover {
-  background-color: #2a3942;
-}
+    #estudarBtn.armed {
+      background-color: orange;
+      color: #000;
+    }
 
-/* estado armado do botão estudar */
-#estudarBtn.armed {
-  background-color: orange;
-  color: #000;
-}
+    #inputMenuBtn {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      margin-left: 8px;
+      border-radius: 50%;
+      border: none;
+      background-color: #1f2c34;
+      color: #e9edef;
+      font-size: 20px;
+      cursor: pointer;
+    }
 
-/* INÍCIO botão 3 pontinhos ao lado da caixa de texto */
-#inputMenuBtn {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  margin-left: 8px;
-  border-radius: 50%;
-  border: none;
-  background-color: #1f2c34;
-  color: #e9edef;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-#inputMenuBtn.armed {
-  background-color: orange;
-  color: #000;
-}
-/* FIM botão 3 pontinhos ao lado da caixa de texto */
+    #inputMenuBtn.armed {
+      background-color: orange;
+      color: #000;
+    }
+    
+    /* Container para as mensagens expandidas (aninhadas) */
+    .nested-messages {
+      padding: 0 0 10px 45px; /* Recuo para mostrar hierarquia */
+      width: 100%;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
   <div class="chat-container">
-    <!-- Cabeçalho -->
     <div class="chat-header">
         <button id="estudarBtn">▶</button>
-        <button id="revisado">Qual é arquitetura dos átomos?</button>
+        <button id="revisado">Menu Inicial</button>
         <button class="header-menu-btn" id="headerMenuBtn">⋮</button>
     </div>
-    <!-- ///////////////////////////////////// -->
-    <!-- Opções que aparecem ao clicar em ":" -->
+    
     <div id="headerMenu" class="context-menu" style="display:none;">
         <button id="headerCopiar">Copiar</button>
         <button id="headerTransferir">Transferir</button>
         <button id="headerColar">Colar</button>
         <button id="headerExcluir">Excluir</button>
     </div>
-    <!-- ///////////////////////////////////// -->
-    <!-- Mensagens -->
+
     <div class="chat-messages" id="chatMessages"></div>
-    <!-- ///////////////////////////////////// -->
-    <!-- Rodapé -->
-<div class="chat-input">
-    <button id="inputMenuBtn" style="margin-left:-10px;">⋮</button>
-    <textarea id="chatInput" placeholder="Mensagem" rows="1"></textarea>
-    <button id="sendBtn">➤</button>
-</div>
 
-<!-- menu popup do input -->
-<div id="inputMenu" class="context-menu" style="display:none;">
-  <button id="inputImagemBtn">Imagem</button>
-</div>
+    <div class="chat-input">
+        <button id="inputMenuBtn" style="margin-left:-10px;">⋮</button>
+        <textarea id="chatInput" placeholder="Mensagem" rows="1"></textarea>
+        <button id="sendBtn">➤</button>
+    </div>
 
-    <!-- input invisível para upload da imagem -->
+    <div id="inputMenu" class="context-menu" style="display:none;">
+      <button id="inputImagemBtn">Imagem</button>
+    </div>
+
     <input type="file" id="imageInput" accept="image/*" style="display:none;">
-    <!-- ///////////////////////////////////// -->
   </div>
 
   <script>
-    ///////////////////////////////////////////////////////////////
-    //1º etapa - 1º acontecimento: pega os parâmetros da URL, e salva numa variável
     const params = new URLSearchParams(window.location.search);
-    //1º etapa - 2º acontecimento: encontra o parâmetro 'id' no meio do outros, e salva numa variável
     const idUrl = params.get('id');
-    //1º etapa - 3º acontecimento: define o valor da variável idChatAtual com o valor de ID pego na URL
     let idChatAtual = idUrl ? idUrl : 'no';
-    console.log(idChatAtual);
-    ///////////////////////////////////////////////////////////////
     
     var editarAtivado = 0;
     const input = document.getElementById('chatInput');
@@ -296,146 +272,92 @@
     const sendBtn = document.getElementById('sendBtn');
     const revisadoBtn = document.getElementById('revisado');
     
-    //Variáveis usadas para adicionar imagem
     let imagemEngatilhada = null;
     const imageInput = document.getElementById('imageInput');
-    
     const inputMenuBtn = document.getElementById('inputMenuBtn');
     const inputMenu = document.getElementById('inputMenu');
     const inputImagemBtn = document.getElementById('inputImagemBtn');
-    ////////////////////////////////////////
 
-function sendMessage() {
-  const text = input.value.trim();
-  if ((!text && !imagemEngatilhada) || !idChatAtual) return;
-
-  const formData = new FormData();
-  formData.append('texto', text);
-  formData.append('id_chat', idChatAtual);
-
-  if (imagemEngatilhada) {
-    formData.append('imagem', imagemEngatilhada);
-    imagemEngatilhada = null;
-    inputMenuBtn.classList.remove('armed');
-    imageInput.value = '';
-  }
-
-  fetch('adicionar_conjunto.php', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      input.value = '';
-      carregarMensagens();
-    }
-  });
-}
-
-function transformarEmChat(idMessage) {
-  if (!idMessage) return;
-
-  fetch('transformar_em_chat.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      idMessage: idMessage
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      input.value = '';
-      carregarMensagens();
-    }
-  });
-}
-
-function editMessage() {
-  const text = input.value.trim();
-  if (!text || !idChatAtual) return;
-
-  fetch('editar_conjunto.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      texto: text,
-      editarAtivado: editarAtivado
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      input.value = '';
-      editarAtivado = 0;
-      carregarMensagens();
-    }
-  });
-}
-
-function deleteMessage(idMessage) {
-  if (!idMessage) return;
-
-  fetch('excluir_conjunto.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      idMessage: idMessage
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      input.value = '';
-      carregarMensagens();
-    }
-  });
-}
-//////////////////////////////////////////////////////////
-//O que acontece ao clicar no botão "Send" ou apertar enter
-input.addEventListener('input', () => {
-  input.style.height = 'auto';
-  input.style.height = input.scrollHeight + 'px';
-});
-sendBtn.addEventListener('click', () => {
-
-  if (editarAtivado === 0) {
-    sendMessage();
-  } else {
-    editMessage();
-  }
-});
-input.addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter' || e.shiftKey) return;
-
-  e.preventDefault();
-  console.log("ID da mensagem: ", editarAtivado);
-
-  if (editarAtivado === 0) {
-    sendMessage();
-  } else {
-    editMessage();
-  }
-});
-//////////////////////////////////////////////////////////
-//O que acontece ao clicar no botão "Estudar"
-estudarBtn.addEventListener('click', () => {
-  window.location.href = 'chat.html?id=' + idChatAtual;
-});
-//////////////////////////////////////////////////////////
-//INÍCIO DE ETAPA: 4ª etapa: montar layout
-    // Variáveis para controle de toque no Safari
     let touchStartY = 0;
     let touchStartX = 0;
     let isDraggingTouch = false;
-    
+    let pressTimer = null;
+    let menuAberto = null;
+
+    function sendMessage() {
+      const text = input.value.trim();
+      if ((!text && !imagemEngatilhada) || !idChatAtual) return;
+
+      const formData = new FormData();
+      formData.append('texto', text);
+      formData.append('id_chat', idChatAtual);
+
+      if (imagemEngatilhada) {
+        formData.append('imagem', imagemEngatilhada);
+        imagemEngatilhada = null;
+        inputMenuBtn.classList.remove('armed');
+        imageInput.value = '';
+      }
+
+      fetch('adicionar_conjunto.php', { method: 'POST', body: formData })
+      .then(response => response.json())
+      .then(data => { if (data.success) { input.value = ''; carregarMensagens(); } });
+    }
+
+    function transformarEmChat(idMessage) {
+      if (!idMessage) return;
+      fetch('transformar_em_chat.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idMessage: idMessage })
+      })
+      .then(response => response.json())
+      .then(data => { if (data.success) { input.value = ''; carregarMensagens(); } });
+    }
+
+    function editMessage() {
+      const text = input.value.trim();
+      if (!text || !idChatAtual) return;
+
+      fetch('editar_conjunto.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto: text, editarAtivado: editarAtivado })
+      })
+      .then(response => response.json())
+      .then(data => { if (data.success) { input.value = ''; editarAtivado = 0; carregarMensagens(); } });
+    }
+
+    function deleteMessage(idMessage) {
+      if (!idMessage) return;
+      fetch('excluir_conjunto.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idMessage: idMessage })
+      })
+      .then(response => response.json())
+      .then(data => { if (data.success) { input.value = ''; carregarMensagens(); } });
+    }
+
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = input.scrollHeight + 'px';
+    });
+
+    sendBtn.addEventListener('click', () => {
+      if (editarAtivado === 0) { sendMessage(); } else { editMessage(); }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.shiftKey) return;
+      e.preventDefault();
+      if (editarAtivado === 0) { sendMessage(); } else { editMessage(); }
+    });
+
+    estudarBtn.addEventListener('click', () => {
+      window.location.href = 'chat.html?id=' + idChatAtual;
+    });
+
     function carregarMensagens() {
       fetch('buscar_conjuntos.php', {
         method: 'POST',
@@ -450,10 +372,56 @@ estudarBtn.addEventListener('click', () => {
       });
     }
 
+    // Função para Expandir as mensagens (Accordion Fluido)
+    function toggleMensagensEmbutidas(mensagens, blockContainer) {
+      let container = blockContainer.querySelector('.nested-messages');
+      
+      // Se já existe aberto, nós fechamos
+      if (container) {
+        container.remove();
+        return;
+      }
+
+      // Se não existe, criamos a caixa de expansão
+      container = document.createElement('div');
+      container.className = 'nested-messages';
+
+      if (!mensagens || mensagens.length === 0) {
+        container.innerHTML = '<div style="color:#aebac1; font-size:13px;">Chat Vazio</div>';
+      } else {
+        mensagens.forEach(m => {
+          const mDiv = document.createElement('div');
+          mDiv.className = 'message';
+          mDiv.style.width = '100%';
+          mDiv.style.backgroundColor = '#005c4b'; // Cor estilo chat do WhatsApp
+          mDiv.style.fontSize = '15px';
+
+          if (m.imagem) {
+            const img = document.createElement('img');
+            img.src = 'imagens/' + m.imagem;
+            img.style.width = '100%';
+            img.style.borderRadius = '8px';
+            img.style.marginBottom = '6px';
+            mDiv.appendChild(img);
+          }
+
+          mDiv.appendChild(document.createTextNode(m.texto));
+          container.appendChild(mDiv);
+        });
+      }
+
+      blockContainer.appendChild(container);
+    }
+
     function montarLayout(mensagens) {
       messages.innerHTML = '';
       if (mensagens.length > 0) {
         mensagens.forEach(msg => {
+          
+          // Container em Bloco (Para comportar a linha e a sanfona em baixo)
+          const blockContainer = document.createElement('div');
+          blockContainer.className = 'block-container';
+
           const wrapper = document.createElement('div');
           wrapper.className = 'message-wrapper';
           wrapper.setAttribute('draggable', 'true');
@@ -474,20 +442,33 @@ estudarBtn.addEventListener('click', () => {
 
           div.appendChild(document.createTextNode(msg.texto));
 
-          const btnPlay = document.createElement('button');
-          btnPlay.textContent = '▶';
-          btnPlay.className = 'message';
-          btnPlay.style.flex = '1';
-          if (msg.tipo === 1) btnPlay.style.backgroundColor = 'green';
+          // BOTÃO LATERAL (DINÂMICO)
+          const btnAcao = document.createElement('button');
+          btnAcao.className = 'message';
+          btnAcao.style.flex = '1';
+          btnAcao.style.justifyContent = 'center';
+          btnAcao.style.alignItems = 'center';
+          btnAcao.style.cursor = 'pointer';
 
-          btnPlay.onclick = (e) => {
-            e.stopPropagation();
-            window.location.href = (msg.tipo === 1 ? 'chat.html' : 'index.html') + '?id=' + msg.id;
-          };
+          if (msg.tipo === 1) {
+             // É CHAT: Mostra o Play e expande na própria tela
+             btnAcao.textContent = '▶';
+             btnAcao.style.backgroundColor = 'green';
+             btnAcao.onclick = (e) => {
+                 e.stopPropagation();
+                 toggleMensagensEmbutidas(msg.mensagens, blockContainer);
+             };
+          } else {
+             // É CONJUNTO: Mostra a quantidade de filhos e navega pra dentro
+             btnAcao.textContent = msg.qtd_filhos;
+             btnAcao.style.backgroundColor = '#1f2c34'; // Cor neutra
+             btnAcao.onclick = (e) => {
+                 e.stopPropagation();
+                 window.location.href = 'index.html?id=' + msg.id;
+             };
+          }
 
-          const cancelPress = () => {
-            clearTimeout(pressTimer);
-          };
+          const cancelPress = () => { clearTimeout(pressTimer); };
 
           // --- LOGICA TOUCH (SAFARI MOBILE) ---
           wrapper.addEventListener('touchstart', (e) => {
@@ -496,11 +477,8 @@ estudarBtn.addEventListener('click', () => {
             touchStartX = touch.clientX;
             isDraggingTouch = false;
 
-            // Inicia timer do menu
             pressTimer = setTimeout(() => {
-              if (!isDraggingTouch) {
-                abrirMenu(touch.clientX, touch.clientY, msg);
-              }
+              if (!isDraggingTouch) { abrirMenu(touch.clientX, touch.clientY, msg); }
             }, 1500);
           }, { passive: true });
 
@@ -509,25 +487,20 @@ estudarBtn.addEventListener('click', () => {
             const moveY = Math.abs(touch.clientY - touchStartY);
             const moveX = Math.abs(touch.clientX - touchStartX);
 
-            // Se moveu mais de 10px, consideramos que quer arrastar e cancelamos o menu
             if (moveY > 10 || moveX > 10) {
               isDraggingTouch = true;
               cancelPress();
               
-              // Entra no modo de arraste visual
               if (!wrapper.classList.contains('dragging')) {
                 wrapper.classList.add('dragging');
               }
-
-              // Prevenir o scroll e o refresh da página enquanto arrasta
               if (e.cancelable) e.preventDefault();
 
-              // Simulação lógica do dragover
               const afterElement = getDragAfterElement(messages, touch.clientY);
               if (afterElement == null) {
-                messages.appendChild(wrapper);
+                messages.appendChild(blockContainer);
               } else {
-                messages.insertBefore(wrapper, afterElement);
+                messages.insertBefore(blockContainer, afterElement);
               }
             }
           }, { passive: false });
@@ -542,9 +515,7 @@ estudarBtn.addEventListener('click', () => {
 
           // --- LOGICA DESKTOP (DRAG & DROP) ---
           div.addEventListener('mousedown', (e) => {
-            pressTimer = setTimeout(() => {
-              abrirMenu(e.clientX, e.clientY, msg);
-            }, 1500);
+            pressTimer = setTimeout(() => { abrirMenu(e.clientX, e.clientY, msg); }, 1500);
           });
           div.addEventListener('mouseup', cancelPress);
           div.addEventListener('mouseleave', cancelPress);
@@ -559,9 +530,11 @@ estudarBtn.addEventListener('click', () => {
             salvarNovaOrdem();
           });
 
-          wrapper.appendChild(btnPlay);
+          wrapper.appendChild(btnAcao);
           wrapper.appendChild(div);
-          messages.appendChild(wrapper);
+          
+          blockContainer.appendChild(wrapper);
+          messages.appendChild(blockContainer);
         });
       }
       messages.scrollTop = messages.scrollHeight;
@@ -570,18 +543,21 @@ estudarBtn.addEventListener('click', () => {
     messages.addEventListener('dragover', e => {
       e.preventDefault();
       const afterElement = getDragAfterElement(messages, e.clientY);
-      const draggable = document.querySelector('.dragging');
-      if (draggable && !isDraggingTouch) { // Evita conflito se o touch já estiver cuidando
+      const draggableWrapper = document.querySelector('.dragging');
+      if (draggableWrapper && !isDraggingTouch) { 
+        // Em Desktop, pegamos o bloco inteiro (pai do wrapper arrastado)
+        const draggableBlock = draggableWrapper.parentElement;
         if (afterElement == null) {
-          messages.appendChild(draggable);
+          messages.appendChild(draggableBlock);
         } else {
-          messages.insertBefore(draggable, afterElement);
+          messages.insertBefore(draggableBlock, afterElement);
         }
       }
     });
 
     function getDragAfterElement(container, y) {
-      const draggableElements = [...container.querySelectorAll('.message-wrapper:not(.dragging)')];
+      // Usamos .block-container ao invés de message-wrapper para garantir que arraste o accordion junto
+      const draggableElements = [...container.querySelectorAll('.block-container:not(:has(.dragging))')];
       return draggableElements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
@@ -602,255 +578,138 @@ estudarBtn.addEventListener('click', () => {
       });
     }
 
-//4ª etapa (construção do layout) - 1º acontecimento: chama a função carregarMensagens
-window.addEventListener('load', carregarMensagens);
-//FIM DE ETAPA: 4ª etapa: montar layout
-///////////////////////////
-let pressTimer = null;
-let menuAberto = null;
+    window.addEventListener('load', carregarMensagens);
 
-function fecharMenu() {
-  if (menuAberto) {
-    menuAberto.remove();
-    menuAberto = null;
-  }
-}
-
-document.addEventListener('mousedown', fecharMenu);
-document.addEventListener('scroll', fecharMenu);
-
-function abrirMenu(x, y, msg) {
-  fecharMenu();
-
-  const menu = document.createElement('div');
-  menu.className = 'context-menu';
-  menu.style.top = y + 'px';
-  menu.style.left = x + 'px';
-
-  // impede o menu de fechar ao soltar o clique
-  menu.addEventListener('mousedown', e => e.stopPropagation());
-  menu.addEventListener('click', e => e.stopPropagation());
-  
-  const virarChat = document.createElement('button');
-  virarChat.textContent = 'Virar chat';
-  virarChat.onclick = () => {
-    transformarEmChat(msg.id);
-    fecharMenu();
-  };
-
-  const btnEditar = document.createElement('button');
-  btnEditar.textContent = 'Editar';
-  btnEditar.onclick = () => {
-    editarAtivado = msg.id;
-    input.value = msg.texto;
-    input.focus();
-    fecharMenu();
-  };
-
-  const btnExcluir = document.createElement('button');
-  btnExcluir.textContent = 'Excluir';
-  btnExcluir.onclick = () => {
-    deleteMessage(msg.id);
-    fecharMenu();
-  };
-
-    menu.appendChild(virarChat);
-    menu.appendChild(btnEditar);
-    menu.appendChild(btnExcluir);
-
-  document.body.appendChild(menu);
-  menuAberto = menu;
-}
-///////////////////////////
-const headerBtn = document.getElementById('headerMenuBtn');
-const headerMenu = document.getElementById('headerMenu');
-
-headerBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-
-  headerMenu.style.display = 'block';
-
-  const rect = headerBtn.getBoundingClientRect();
-  const menuWidth = headerMenu.offsetWidth;
-
-  headerMenu.style.top = rect.bottom + 'px';
-  headerMenu.style.left = (rect.left - menuWidth) + 'px';
-});
-
-// impede fechar ao clicar no próprio menu
-headerMenu.addEventListener('click', (e) => {
-  e.stopPropagation();
-});
-
-// fecha ao clicar fora
-document.addEventListener('click', () => {
-  headerMenu.style.display = 'none';
-});
-
-document.getElementById('headerExcluir').addEventListener('click', () => {
-  console.log('Excluir conversa');
-  headerMenu.style.display = 'none';
-});
-
-document.getElementById('headerCopiar').addEventListener('click', () => {
-  copiarConjunto(idChatAtual);
-  headerMenu.style.display = 'none';
-});
-
-document.getElementById('headerTransferir').addEventListener('click', () => {
-  transferirConjunto();
-  headerMenu.style.display = 'none';
-});
-
-document.getElementById('headerColar').addEventListener('click', () => {
-  console.log('Colar conjunto');
-  headerMenu.style.display = 'none';
-});
-///////////////////////////
-revisadoBtn.addEventListener('click', () => {
-  concluirRevisao();
-});
-///////////////////////////
-// Concluir Revisão
-function concluirRevisao() {
-  if (!idChatAtual) return;
-
-  fetch('concluir_revisao.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      id_chat: idChatAtual
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      carregarMensagens();
+    function fecharMenu() {
+      if (menuAberto) { menuAberto.remove(); menuAberto = null; }
     }
-  });
-}
-///////////////////////////
-// transferir conjunto
-function transferirConjunto() {
-  if (!idChatAtual) return;
 
-  fetch('transferir_conjunto.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      id_conjunto: idChatAtual
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      carregarMensagens();
+    document.addEventListener('mousedown', fecharMenu);
+    document.addEventListener('scroll', fecharMenu);
+
+    function abrirMenu(x, y, msg) {
+      fecharMenu();
+      const menu = document.createElement('div');
+      menu.className = 'context-menu';
+      menu.style.top = y + 'px';
+      menu.style.left = x + 'px';
+
+      menu.addEventListener('mousedown', e => e.stopPropagation());
+      menu.addEventListener('click', e => e.stopPropagation());
+      
+      const virarChat = document.createElement('button');
+      virarChat.textContent = 'Virar chat';
+      virarChat.onclick = () => { transformarEmChat(msg.id); fecharMenu(); };
+
+      const btnEditar = document.createElement('button');
+      btnEditar.textContent = 'Editar';
+      btnEditar.onclick = () => {
+        editarAtivado = msg.id;
+        input.value = msg.texto;
+        input.focus();
+        fecharMenu();
+      };
+
+      const btnExcluir = document.createElement('button');
+      btnExcluir.textContent = 'Excluir';
+      btnExcluir.onclick = () => { deleteMessage(msg.id); fecharMenu(); };
+
+      menu.appendChild(virarChat);
+      menu.appendChild(btnEditar);
+      menu.appendChild(btnExcluir);
+      document.body.appendChild(menu);
+      menuAberto = menu;
     }
-  });
-}
-// copiar conjunto
-function copiarConjunto(idConjunto) {
-  if (!idConjunto) return;
 
-  fetch('copiar_conjunto.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      id_conjunto: idConjunto
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      carregarMensagens();
+    const headerBtn = document.getElementById('headerMenuBtn');
+    const headerMenu = document.getElementById('headerMenu');
+
+    headerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      headerMenu.style.display = 'block';
+      const rect = headerBtn.getBoundingClientRect();
+      const menuWidth = headerMenu.offsetWidth;
+      headerMenu.style.top = rect.bottom + 'px';
+      headerMenu.style.left = (rect.left - menuWidth) + 'px';
+    });
+
+    headerMenu.addEventListener('click', (e) => { e.stopPropagation(); });
+    document.addEventListener('click', () => { headerMenu.style.display = 'none'; });
+    
+    document.getElementById('headerExcluir').addEventListener('click', () => { headerMenu.style.display = 'none'; });
+    document.getElementById('headerCopiar').addEventListener('click', () => { copiarConjunto(idChatAtual); headerMenu.style.display = 'none'; });
+    document.getElementById('headerTransferir').addEventListener('click', () => { transferirConjunto(); headerMenu.style.display = 'none'; });
+    document.getElementById('headerColar').addEventListener('click', () => { colarConjunto(); headerMenu.style.display = 'none'; });
+
+    revisadoBtn.addEventListener('click', () => { concluirRevisao(); });
+
+    function concluirRevisao() {
+      if (!idChatAtual) return;
+      fetch('concluir_revisao.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_chat: idChatAtual })
+      })
+      .then(response => response.json())
+      .then(data => { if (data.success) { carregarMensagens(); } });
     }
-  });
-}
-// colar conjunto
-function colarConjunto() {
-  if (!idChatAtual) return;
 
-  fetch('colar_conjunto.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      id_conjunto: idChatAtual
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      carregarMensagens();
+    function transferirConjunto() {
+      if (!idChatAtual) return;
+      fetch('transferir_conjunto.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_conjunto: idChatAtual }) })
+      .then(response => response.json())
+      .then(data => { if (data.success) { carregarMensagens(); } });
     }
-  });
-}
-///////////////////////////
-// abrir menu
-inputMenuBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
 
-  // se já tem imagem, remove
-  if (imagemEngatilhada) {
-    imagemEngatilhada = null;
-    inputMenuBtn.classList.remove('armed');
-    imageInput.value = '';
-    inputMenu.style.display = 'none';
-    return;
-  }
+    function copiarConjunto(idConjunto) {
+      if (!idConjunto) return;
+      fetch('copiar_conjunto.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_conjunto: idConjunto }) })
+      .then(response => response.json())
+      .then(data => { if (data.success) { carregarMensagens(); } });
+    }
 
-  // senão, abre o menu
-  inputMenu.style.display = 'block';
+    function colarConjunto() {
+      if (!idChatAtual) return;
+      fetch('colar_conjunto.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_conjunto: idChatAtual }) })
+      .then(response => response.json())
+      .then(data => { if (data.success) { carregarMensagens(); } });
+    }
 
-  const rect = inputMenuBtn.getBoundingClientRect();
-  inputMenu.style.top = rect.top - inputMenu.offsetHeight + 'px';
-  inputMenu.style.left = rect.left + 'px';
-});
+    inputMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (imagemEngatilhada) {
+        imagemEngatilhada = null;
+        inputMenuBtn.classList.remove('armed');
+        imageInput.value = '';
+        inputMenu.style.display = 'none';
+        return;
+      }
+      inputMenu.style.display = 'block';
+      const rect = inputMenuBtn.getBoundingClientRect();
+      inputMenu.style.top = rect.top - inputMenu.offsetHeight + 'px';
+      inputMenu.style.left = rect.left + 'px';
+    });
 
-// fechar ao clicar fora
-document.addEventListener('click', () => {
-  inputMenu.style.display = 'none';
-});
+    document.addEventListener('click', () => { inputMenu.style.display = 'none'; });
+    inputImagemBtn.addEventListener('click', () => { imageInput.click(); inputMenu.style.display = 'none'; });
 
-// opção imagem
-inputImagemBtn.addEventListener('click', () => {
-  imageInput.click();
-  inputMenu.style.display = 'none';
-});
+    imageInput.addEventListener('change', () => {
+      if (imageInput.files.length > 0) {
+        imagemEngatilhada = imageInput.files[0];
+        inputMenuBtn.classList.add('armed');
+      }
+    });
 
-// imagem selecionada
-imageInput.addEventListener('change', () => {
-  if (imageInput.files.length > 0) {
-    imagemEngatilhada = imageInput.files[0];
-    inputMenuBtn.classList.add('armed');
-  }
-});
-////////////////////////////////////////
-//FORÇA A PROIBIÇÃO DE ZOOM PARA IPHONE
-// Impede o zoom de pinça (multi-touch)
-document.addEventListener('touchstart', function (event) {
-  if (event.touches.length > 1) {
-    event.preventDefault();
-  }
-}, { passive: false });
+    document.addEventListener('touchstart', function (event) {
+      if (event.touches.length > 1) { event.preventDefault(); }
+    }, { passive: false });
 
-// Impede o zoom de clique duplo
-let lastTouchEnd = 0;
-document.addEventListener('touchend', function (event) {
-  const now = (new Date()).getTime();
-  if (now - lastTouchEnd <= 300) {
-    event.preventDefault();
-  }
-  lastTouchEnd = now;
-}, false);
-////////////////////////////////////////
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) { event.preventDefault(); }
+      lastTouchEnd = now;
+    }, false);
   </script>
 </body>
 </html>
