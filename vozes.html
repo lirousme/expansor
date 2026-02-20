@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Vozes PT-BR</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
+    padding: 30px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+.voice {
+    background: #1e1e1e;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Vozes PT-BR disponíveis</h1>
+<div id="lista">Carregando vozes...</div>
+
+<script>
+function listarVozes() {
+
+    const lista = document.getElementById("lista");
+    const vozes = speechSynthesis.getVoices();
+
+    // Filtra só pt-BR
+    const vozesPTBR = vozes.filter(v => 
+        v.lang.toLowerCase() === "pt-br"
+    );
+
+    if (!vozesPTBR.length) {
+        lista.innerHTML = "Nenhuma voz PT-BR encontrada.";
+        return;
+    }
+
+    lista.innerHTML = "";
+
+    vozesPTBR.forEach((voz, i) => {
+
+        const div = document.createElement("div");
+        div.className = "voice";
+
+        div.innerHTML = `
+            <b>${i + 1}. ${voz.name}</b><br>
+            Idioma: ${voz.lang}<br>
+            Default: ${voz.default ? "Sim" : "Não"}
+        `;
+
+        lista.appendChild(div);
+    });
+}
+
+window.onload = () => {
+    listarVozes();
+    speechSynthesis.onvoiceschanged = listarVozes;
+};
+</script>
+
+</body>
+</html>
