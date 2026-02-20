@@ -42,7 +42,6 @@ ORDER BY c.ordem ASC, c.id ASC
 $conjuntos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // ANINHAMENTO DOS DADOS
-// Varre cada conjunto para buscar suas mensagens (se for chat) ou contar os filhos
 foreach ($conjuntos as &$c) {
     if ($c['tipo'] == 1) {
         // Se for tipo 1 (Chat), busca todas as mensagens dele
@@ -52,8 +51,19 @@ foreach ($conjuntos as &$c) {
         
         $c['mensagens'] = $stmtMsg->fetchAll(PDO::FETCH_ASSOC);
         $c['qtd_filhos'] = 0;
+        
+    } elseif ($c['tipo'] == 2) {
+        // Se for tipo 2 (Portal), conta quantos filhos o CONJUNTO ORIGINAL possui
+        $id_alvo = $c['id_conjunto_portal'] ? $c['id_conjunto_portal'] : $c['id'];
+        $sqlCount = "SELECT COUNT(*) FROM conjuntos_relacoes WHERE id_conjunto_pai = :id";
+        $stmtCount = $pdo->prepare($sqlCount);
+        $stmtCount->execute(['id' => $id_alvo]);
+        
+        $c['qtd_filhos'] = (int) $stmtCount->fetchColumn();
+        $c['mensagens'] = [];
+        
     } else {
-        // Se NÃO for tipo 1, conta quantos filhos ele possui
+        // Se NÃO for tipo 1 nem 2, conta quantos filhos ele mesmo possui
         $sqlCount = "SELECT COUNT(*) FROM conjuntos_relacoes WHERE id_conjunto_pai = :id";
         $stmtCount = $pdo->prepare($sqlCount);
         $stmtCount->execute(['id' => $c['id']]);
@@ -68,5 +78,5 @@ unset($c); // Quebra a referência da variável
 echo json_encode([
   'success'   => true,
   'id_chat'   => $id_conjunto,
-  'mensagens' => $conjuntos // Continua chamando 'mensagens' para manter compatibilidade com seu JS atual
+  'mensagens' => $conjuntos 
 ]);
