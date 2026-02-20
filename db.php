@@ -1,9 +1,9 @@
 <?php
 // db.php
-$DB_HOST = 'localhost';
-$DB_NAME = 'u205629180_expansor';
-$DB_USER = 'u205629180_expansor';
-$DB_PASS = 'naotemsenhaA1@75351595'; // ajuste se necessário
+$DB_HOST = 'x';
+$DB_NAME = 'x';
+$DB_USER = 'x';
+$DB_PASS = 'x'; // ajuste se necessário
 
 $options = [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -17,3 +17,4 @@ try {
     echo json_encode(['error' => 'DB connection failed: '.$e->getMessage()]);
     exit;
 }
+
