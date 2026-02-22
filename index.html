@@ -248,6 +248,7 @@
     </div>
     
     <div id="headerMenu" class="context-menu" style="display:none;">
+        <button id="headerPerguntas">Perguntas</button> <!-- NOVO BOTÃO ADICIONADO AQUI -->
         <button id="headerCopiar">Copiar</button>
         <button id="headerTransferir">Transferir</button>
         <button id="headerCriarPortal">Criar Portal</button>
@@ -690,6 +691,11 @@
     headerMenu.addEventListener('click', (e) => { e.stopPropagation(); });
     document.addEventListener('click', () => { headerMenu.style.display = 'none'; });
     
+    // NOVO EVENT LISTENER ADICIONADO AQUI PARA REDIRECIONAR A "PERGUNTAS.HTML"
+    document.getElementById('headerPerguntas').addEventListener('click', () => {
+        window.location.href = 'perguntas.html?id=' + idChatAtual;
+        headerMenu.style.display = 'none';
+    });
     document.getElementById('headerExcluir').addEventListener('click', () => { headerMenu.style.display = 'none'; });
     document.getElementById('headerCopiar').addEventListener('click', () => { copiarConjunto(idChatAtual); headerMenu.style.display = 'none'; });
     document.getElementById('headerTransferir').addEventListener('click', () => { transferirConjunto(); headerMenu.style.display = 'none'; });
