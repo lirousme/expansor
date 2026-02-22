@@ -173,6 +173,36 @@
       background-color: #2a3942;
     }
 
+    /* Menu Pop-up Centralizado (Header) */
+    .popup-modal {
+      position: fixed;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%);
+      width: 85%;
+      max-width: 320px;
+      border-radius: 12px;
+      padding: 0;
+      z-index: 9999;
+    }
+
+    #headerMenu.popup-modal button {
+      text-align: center;
+      font-size: 16px;
+      padding: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    #headerMenu.popup-modal button:last-child {
+      border-bottom: none;
+    }
+
+    #headerVoltar {
+      color: #00a884 !important;
+      font-weight: bold;
+      font-size: 18px !important;
+    }
+
     .chat-header {
       justify-content: space-between;
     }
@@ -247,13 +277,17 @@
         <button class="header-menu-btn" id="headerMenuBtn">⋮</button>
     </div>
     
-    <div id="headerMenu" class="context-menu" style="display:none;">
+    <!-- Fundo Escuro para o Menu do Header -->
+    <div id="headerMenuOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9998;"></div>
+    
+    <div id="headerMenu" class="context-menu popup-modal" style="display:none;">
+        <button id="headerVoltar">Voltar</button>
         <button id="headerPerguntas">Perguntas</button> <!-- NOVO BOTÃO ADICIONADO AQUI -->
         <button id="headerCopiar">Copiar</button>
         <button id="headerTransferir">Transferir</button>
         <button id="headerCriarPortal">Criar Portal</button>
         <button id="headerColar">Colar</button>
-        <button id="headerExcluir">Excluir</button>
+        <button id="headerExcluir" style="color: #ff4d4d;">Excluir</button>
     </div>
 
     <div class="chat-messages" id="chatMessages"></div>
@@ -678,29 +712,36 @@
 
     const headerBtn = document.getElementById('headerMenuBtn');
     const headerMenu = document.getElementById('headerMenu');
+    const headerMenuOverlay = document.getElementById('headerMenuOverlay');
+
+    function fecharHeaderMenu() {
+        headerMenu.style.display = 'none';
+        if (headerMenuOverlay) headerMenuOverlay.style.display = 'none';
+    }
 
     headerBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      headerMenuOverlay.style.display = 'block';
       headerMenu.style.display = 'block';
-      const rect = headerBtn.getBoundingClientRect();
-      const menuWidth = headerMenu.offsetWidth;
-      headerMenu.style.top = rect.bottom + 'px';
-      headerMenu.style.left = (rect.left - menuWidth) + 'px';
     });
 
     headerMenu.addEventListener('click', (e) => { e.stopPropagation(); });
-    document.addEventListener('click', () => { headerMenu.style.display = 'none'; });
+    headerMenuOverlay.addEventListener('click', fecharHeaderMenu);
+    document.addEventListener('click', fecharHeaderMenu);
     
     // NOVO EVENT LISTENER ADICIONADO AQUI PARA REDIRECIONAR A "PERGUNTAS.HTML"
+    document.getElementById('headerVoltar').addEventListener('click', fecharHeaderMenu);
+    
     document.getElementById('headerPerguntas').addEventListener('click', () => {
         window.location.href = 'perguntas.html?id=' + idChatAtual;
-        headerMenu.style.display = 'none';
+        fecharHeaderMenu();
     });
-    document.getElementById('headerExcluir').addEventListener('click', () => { headerMenu.style.display = 'none'; });
-    document.getElementById('headerCopiar').addEventListener('click', () => { copiarConjunto(idChatAtual); headerMenu.style.display = 'none'; });
-    document.getElementById('headerTransferir').addEventListener('click', () => { transferirConjunto(); headerMenu.style.display = 'none'; });
-    document.getElementById('headerCriarPortal').addEventListener('click', () => { criarPortal(); headerMenu.style.display = 'none'; });
-    document.getElementById('headerColar').addEventListener('click', () => { colarConjunto(); headerMenu.style.display = 'none'; });
+    
+    document.getElementById('headerExcluir').addEventListener('click', () => { fecharHeaderMenu(); });
+    document.getElementById('headerCopiar').addEventListener('click', () => { copiarConjunto(idChatAtual); fecharHeaderMenu(); });
+    document.getElementById('headerTransferir').addEventListener('click', () => { transferirConjunto(); fecharHeaderMenu(); });
+    document.getElementById('headerCriarPortal').addEventListener('click', () => { criarPortal(); fecharHeaderMenu(); });
+    document.getElementById('headerColar').addEventListener('click', () => { colarConjunto(); fecharHeaderMenu(); });
 
     revisadoBtn.addEventListener('click', () => { concluirRevisao(); });
 
