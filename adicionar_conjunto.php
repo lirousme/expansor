@@ -1,5 +1,5 @@
 <?php
-// adicionar_mensagem.php
+// adicionar_conjunto.php
 header('Content-Type: application/json');
 
 require 'db.php';
@@ -43,43 +43,55 @@ if ((!$texto || trim($texto) === '') && !$imagemNome) {
 try {
     $pdo->beginTransaction();
 
+    // Calcular nova ordem para a tabela conjuntos (para itens raiz ou geral)
+    $stmtOrdemConjunto = $pdo->query("SELECT COALESCE(MAX(ordem), -1) + 1 FROM conjuntos");
+    $novaOrdemConjunto = $stmtOrdemConjunto->fetchColumn();
+
     /*
     3. Criar o conjunto (mensagem também é conjunto)
     */
-$stmt = $pdo->prepare(
-    "INSERT INTO conjuntos (texto, imagem)
-     VALUES (:texto, :imagem)"
-);
-$stmt->execute([
-    ':texto'  => $texto,
-    ':imagem' => $imagemNome
-]);
+    $stmt = $pdo->prepare(
+        "INSERT INTO conjuntos (texto, imagem, ordem)
+         VALUES (:texto, :imagem, :ordem)"
+    );
+    $stmt->execute([
+        ':texto'  => $texto,
+        ':imagem' => $imagemNome,
+        ':ordem'  => $novaOrdemConjunto
+    ]);
 
-$id_conjunto = $pdo->lastInsertId();
+    $id_conjunto = $pdo->lastInsertId();
 
-/*
-4. Criar apenas uma revisão para o novo conjunto
-*/
-$stmtRevisao = $pdo->prepare(
-    "INSERT INTO revisoes (id_chat_conjunto)
-     VALUES (:id_chat_conjunto)"
-);
+    /*
+    4. Criar apenas uma revisão para o novo conjunto
+    */
+    $stmtRevisao = $pdo->prepare(
+        "INSERT INTO revisoes (id_chat_conjunto)
+         VALUES (:id_chat_conjunto)"
+    );
 
-$stmtRevisao->execute([
-    ':id_chat_conjunto' => $id_conjunto
-]);
+    $stmtRevisao->execute([
+        ':id_chat_conjunto' => $id_conjunto
+    ]);
 
     /*
     5. Relacionar com o conjunto pai (se existir)
     */
     if ($id_chat_conjunto !== 'no' && $id_chat_conjunto !== null) {
+        
+        // Calcular nova ordem para o item dentro da lista de filhos do pai específico
+        $stmtOrdemRel = $pdo->prepare("SELECT COALESCE(MAX(ordem), -1) + 1 FROM conjuntos_relacoes WHERE id_conjunto_pai = :pai");
+        $stmtOrdemRel->execute([':pai' => $id_chat_conjunto]);
+        $novaOrdemRel = $stmtOrdemRel->fetchColumn();
+
         $stmt = $pdo->prepare(
-            "INSERT INTO conjuntos_relacoes (id_conjunto_filho, id_conjunto_pai)
-             VALUES (:filho, :pai)"
+            "INSERT INTO conjuntos_relacoes (id_conjunto_filho, id_conjunto_pai, ordem)
+             VALUES (:filho, :pai, :ordem)"
         );
         $stmt->execute([
             ':filho' => $id_conjunto,
-            ':pai'   => $id_chat_conjunto
+            ':pai'   => $id_chat_conjunto,
+            ':ordem' => $novaOrdemRel
         ]);
     }
 
