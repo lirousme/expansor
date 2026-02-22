@@ -46,15 +46,21 @@ if (
 try {
     $pdo->beginTransaction();
 
-    // insere a mensagem já vinculada ao chat
+    // Calcular nova ordem da mensagem dentro deste chat específico
+    $stmtOrdemMsg = $pdo->prepare("SELECT COALESCE(MAX(ordem), -1) + 1 FROM mensagens WHERE id_chat_conjunto = :id_chat_conjunto");
+    $stmtOrdemMsg->execute([':id_chat_conjunto' => $id_chat_conjunto]);
+    $novaOrdemMsg = $stmtOrdemMsg->fetchColumn();
+
+    // insere a mensagem já vinculada ao chat e com a respectiva ordem
     $stmt = $pdo->prepare(
-        "INSERT INTO mensagens (texto, imagem, id_chat_conjunto)
-         VALUES (:texto, :imagem, :id_chat_conjunto)"
+        "INSERT INTO mensagens (texto, imagem, id_chat_conjunto, ordem)
+         VALUES (:texto, :imagem, :id_chat_conjunto, :ordem)"
     );
     $stmt->execute([
         ':texto'            => $texto,
         ':imagem'           => $imagemNome,
-        ':id_chat_conjunto' => $id_chat_conjunto
+        ':id_chat_conjunto' => $id_chat_conjunto,
+        ':ordem'            => $novaOrdemMsg
     ]);
 
     $pdo->commit();
