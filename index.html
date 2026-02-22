@@ -132,6 +132,14 @@
         width: 100%;
     }
 
+    /* ESTILO PARA INDICAR QUE PODE SER ARRASTADO APÓS DUPLO CLIQUE */
+    .message-wrapper.drag-enabled {
+      outline: 2px dashed #00a884;
+      background: rgba(0, 168, 132, 0.2);
+      border-radius: 8px;
+      padding: 2px;
+    }
+
     .message-wrapper.dragging {
       opacity: 0.5;
       background: rgba(255, 255, 255, 0.05);
@@ -359,6 +367,16 @@
       window.location.href = 'chat.html?id=' + idChatAtual;
     });
 
+    // Reseta o estado "drag-enabled" globalmente caso o usuário clique fora
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.message-wrapper')) {
+        document.querySelectorAll('.message-wrapper').forEach(w => {
+          w.removeAttribute('draggable');
+          w.classList.remove('drag-enabled');
+        });
+      }
+    });
+
     function carregarMensagens() {
       fetch('buscar_conjuntos.php', {
         method: 'POST',
@@ -421,7 +439,7 @@
 
           const wrapper = document.createElement('div');
           wrapper.className = 'message-wrapper';
-          wrapper.setAttribute('draggable', 'true');
+          // REMOVIDO o draggable="true" nativo daqui
           wrapper.dataset.id = msg.id;
 
           const div = document.createElement('div');
@@ -476,6 +494,21 @@
 
           const cancelPress = () => { clearTimeout(pressTimer); };
 
+          // Lógica de Ativar Arraste via duplo clique/toque
+          let lastTap = 0;
+          const ativarArraste = () => {
+            // Remove de outros elementos para focar neste
+            document.querySelectorAll('.message-wrapper').forEach(w => {
+              w.removeAttribute('draggable');
+              w.classList.remove('drag-enabled');
+            });
+            wrapper.setAttribute('draggable', 'true');
+            wrapper.classList.add('drag-enabled');
+            if (navigator.vibrate) navigator.vibrate(50);
+          };
+
+          wrapper.addEventListener('dblclick', ativarArraste);
+
           // --- LOGICA TOUCH (SAFARI MOBILE) ---
           wrapper.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
@@ -489,6 +522,9 @@
           }, { passive: true });
 
           wrapper.addEventListener('touchmove', (e) => {
+            // BLOQUEIO: Só processa a lógica de arrastar se foi duplo clicado/tocado
+            if (!wrapper.classList.contains('drag-enabled')) return;
+
             const touch = e.touches[0];
             const moveY = Math.abs(touch.clientY - touchStartY);
             const moveX = Math.abs(touch.clientX - touchStartX);
@@ -511,10 +547,22 @@
             }
           }, { passive: false });
 
-          wrapper.addEventListener('touchend', () => {
+          wrapper.addEventListener('touchend', (e) => {
             cancelPress();
+            
+            // Detecta duplo-toque (gap < 300ms)
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0 && !isDraggingTouch) {
+              ativarArraste();
+              if (e.cancelable) e.preventDefault();
+            }
+            lastTap = currentTime;
+
             if (wrapper.classList.contains('dragging')) {
               wrapper.classList.remove('dragging');
+              wrapper.classList.remove('drag-enabled');
+              wrapper.removeAttribute('draggable');
               salvarNovaOrdem();
             }
           });
@@ -533,6 +581,8 @@
 
           wrapper.addEventListener('dragend', () => {
             wrapper.classList.remove('dragging');
+            wrapper.classList.remove('drag-enabled');
+            wrapper.removeAttribute('draggable');
             salvarNovaOrdem();
           });
 
@@ -722,11 +772,11 @@
       if (event.touches.length > 1) { event.preventDefault(); }
     }, { passive: false });
 
-    let lastTouchEnd = 0;
+    let lastTouchEndGlobal = 0;
     document.addEventListener('touchend', function (event) {
       const now = (new Date()).getTime();
-      if (now - lastTouchEnd <= 300) { event.preventDefault(); }
-      lastTouchEnd = now;
+      if (now - lastTouchEndGlobal <= 300 && !event.target.closest('.message-wrapper')) { event.preventDefault(); }
+      lastTouchEndGlobal = now;
     }, false);
   </script>
 </body>
