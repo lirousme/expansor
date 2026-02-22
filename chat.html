@@ -128,6 +128,14 @@
     touch-action: pan-y;
 }
 
+/* ESTILO PARA INDICAR QUE PODE SER ARRASTADO APÓS DUPLO CLIQUE */
+.message-wrapper.drag-enabled {
+    outline: 2px dashed #00a884;
+    background: rgba(0, 168, 132, 0.2);
+    border-radius: 8px;
+    padding: 2px;
+}
+
 .message-wrapper.dragging {
     opacity: 0.5;
     background: rgba(255, 255, 255, 0.05);
@@ -511,6 +519,16 @@ function formatDia(dataStr) {
   });
 }
 
+// Reseta o estado "drag-enabled" globalmente caso o usuário clique fora
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.message-wrapper')) {
+    document.querySelectorAll('.message-wrapper').forEach(w => {
+      w.removeAttribute('draggable');
+      w.classList.remove('drag-enabled');
+    });
+  }
+});
+
 function carregarMensagens() {
   fetch('buscar_mensagens.php', {
     method: 'POST',
@@ -563,7 +581,7 @@ function carregarMensagens() {
 
           const wrapper = document.createElement('div');
           wrapper.className = 'message-wrapper';
-          wrapper.setAttribute('draggable', 'true');
+          // REMOVIDO o draggable="true" nativo daqui
           wrapper.dataset.id = msg.id;
 
           const div = document.createElement('div');
@@ -592,6 +610,21 @@ function carregarMensagens() {
             clearTimeout(pressTimer);
           };
 
+          // Lógica de Ativar Arraste via duplo clique/toque
+          let lastTap = 0;
+          const ativarArraste = () => {
+            // Remove de outros elementos para focar neste
+            document.querySelectorAll('.message-wrapper').forEach(w => {
+              w.removeAttribute('draggable');
+              w.classList.remove('drag-enabled');
+            });
+            wrapper.setAttribute('draggable', 'true');
+            wrapper.classList.add('drag-enabled');
+            if (navigator.vibrate) navigator.vibrate(50); // vibra de leve se suportado
+          };
+
+          wrapper.addEventListener('dblclick', ativarArraste);
+
           // --- LOGICA TOUCH (SAFARI MOBILE) ---
           wrapper.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
@@ -608,6 +641,9 @@ function carregarMensagens() {
           }, { passive: true });
 
           wrapper.addEventListener('touchmove', (e) => {
+            // BLOQUEIO: Só processa a lógica de arrastar se foi duplo clicado/tocado
+            if (!wrapper.classList.contains('drag-enabled')) return;
+
             const touch = e.touches[0];
             const moveY = Math.abs(touch.clientY - touchStartY);
             const moveX = Math.abs(touch.clientX - touchStartX);
@@ -635,10 +671,22 @@ function carregarMensagens() {
             }
           }, { passive: false });
 
-          wrapper.addEventListener('touchend', () => {
+          wrapper.addEventListener('touchend', (e) => {
             cancelPress();
+            
+            // Detecta duplo-toque (gap < 300ms)
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0 && !isDraggingTouch) {
+              ativarArraste();
+              if (e.cancelable) e.preventDefault();
+            }
+            lastTap = currentTime;
+
             if (wrapper.classList.contains('dragging')) {
               wrapper.classList.remove('dragging');
+              wrapper.classList.remove('drag-enabled');
+              wrapper.removeAttribute('draggable');
               salvarNovaOrdem();
             }
           });
@@ -659,6 +707,8 @@ function carregarMensagens() {
 
           wrapper.addEventListener('dragend', () => {
             wrapper.classList.remove('dragging');
+            wrapper.classList.remove('drag-enabled');
+            wrapper.removeAttribute('draggable');
             salvarNovaOrdem();
           });
 
@@ -875,14 +925,14 @@ document.addEventListener('touchstart', function (event) {
   }
 }, { passive: false });
 
-// Impede o zoom de clique duplo
-let lastTouchEnd = 0;
+// Impede o zoom de clique duplo (apenas no root do document, não nos botões)
+let lastTouchEndGlobal = 0;
 document.addEventListener('touchend', function (event) {
   const now = (new Date()).getTime();
-  if (now - lastTouchEnd <= 300) {
+  if (now - lastTouchEndGlobal <= 300 && !event.target.closest('.message-wrapper')) {
     event.preventDefault();
   }
-  lastTouchEnd = now;
+  lastTouchEndGlobal = now;
 }, false);
 ////////////////////////////////////////
   </script>
